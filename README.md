@@ -6,7 +6,7 @@ The package implements a concurrent weather station that runs three independent 
 measurements at configurable intervals and sends them through a shared channel.
 
 Example usage:
-
+```go
 station := weather.NewStation(1*time.Second, 5*time.Second)
 defer station.Stop()
 
@@ -15,7 +15,7 @@ if err != nil {
 		log.Fatal(err)
 	}
 fmt.Printf("Type: %s, Value: %.2f\n", data.MType, data.Value)
-
+```
 The weather station generates the following measurements:
   - Temperature: -5-30°C
   - Humidity: 40-80%
