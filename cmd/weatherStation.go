@@ -17,28 +17,22 @@ func main() {
 	cmd := &cli.Command{
 		Name:  "weatherStation",
 		Usage: "Weather station displays Temperature, Humidity, and Pressure",
-		Commands: []*cli.Command{
-			{
-				Name:  "run",
-				Usage: "Run the weather station",
-				Flags: []cli.Flag{
-					&cli.IntFlag{
-						Name:  "timeout",
-						Usage: "Timeout for reading sensor in seconds",
-						Value: 5,
-					},
-					&cli.IntFlag{
-						Name:  "pollTime",
-						Usage: "Sensor refresh interval in ms",
-						Value: 500,
-					},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					timeoutSec := cmd.Int("timeout")
-					pollTime := cmd.Int("pollTime")
-					return runTUI(pollTime, timeoutSec)
-				},
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:  "timeout",
+				Usage: "Timeout for reading sensor in seconds",
+				Value: 5,
 			},
+			&cli.IntFlag{
+				Name:  "pollTime",
+				Usage: "Sensor refresh interval in ms",
+				Value: 500,
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			timeoutSec := cmd.Int("timeout")
+			pollTime := cmd.Int("pollTime")
+			return runTUI(pollTime, timeoutSec)
 		},
 	}
 
