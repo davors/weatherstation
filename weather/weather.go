@@ -27,11 +27,13 @@ import (
 	"time"
 )
 
+// WeatherData represents a single weather measurement.
 type WeatherData struct {
 	MType string
 	Value float32
 }
 
+// Station represents a weather station with multiple sensors.
 type Station struct {
 	data            chan WeatherData
 	stopCh          chan struct{}
@@ -39,6 +41,7 @@ type Station struct {
 	timeout         time.Duration
 }
 
+// NewStation creates a new weather station with the specified polling interval and timeout.
 func NewStation(pollingInterval time.Duration, timeout time.Duration) *Station {
 	s := &Station{
 		data:   make(chan WeatherData, 3),
@@ -53,10 +56,12 @@ func NewStation(pollingInterval time.Duration, timeout time.Duration) *Station {
 	return s
 }
 
+// Stop stops the weather station and all its sensors.
 func (s *Station) Stop() {
 	close(s.stopCh)
 }
 
+// runTemperatureSensor simulates the temperature sensor.
 func (s *Station) runTemperatureSensor() {
 	for {
 		select {
@@ -70,6 +75,8 @@ func (s *Station) runTemperatureSensor() {
 		}
 	}
 }
+
+// runHumiditySensor simulates the humidity sensor.
 func (s *Station) runHumiditySensor() {
 	for {
 		select {
@@ -82,6 +89,8 @@ func (s *Station) runHumiditySensor() {
 		}
 	}
 }
+
+// runPressureSensor simulates the pressure sensor.
 func (s *Station) runPressureSensor() {
 	for {
 		select {
@@ -95,6 +104,7 @@ func (s *Station) runPressureSensor() {
 	}
 }
 
+// GetData retrieves a weather measurement from the station, respecting the timeout.
 func (s *Station) GetData() (WeatherData, error) {
 	select {
 	case m := <-s.data:
