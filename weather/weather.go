@@ -27,6 +27,9 @@ import (
 	"time"
 )
 
+// ErrTimeout is returned by GetData when no measurement arrives within the timeout.
+var ErrTimeout = errors.New("weather station is not responding")
+
 // WeatherData represents a single weather measurement.
 type WeatherData struct {
 	MType string
@@ -49,9 +52,9 @@ func NewStation(pollingInterval time.Duration, timeout time.Duration) *Station {
 	}
 	s.pollingInterval = pollingInterval
 	s.timeout = timeout
-	go s.runTemperatureSensor()
-	go s.runHumiditySensor()
-	go s.runPressureSensor()
+	go s.runSensor("Temperature", -5, 35)
+	go s.runSensor("Humidity", 40, 40)
+	go s.runSensor("Pressure", 950, 60)
 
 	return s
 }
@@ -61,55 +64,29 @@ func (s *Station) Stop() {
 	close(s.stopCh)
 }
 
-// runTemperatureSensor simulates the temperature sensor.
-func (s *Station) runTemperatureSensor() {
+// runSensor simulates a sensor of the given type that generates random
+// values in the interval [min, min+span).
+func (s *Station) runSensor(mType string, min, span float32) {
 	for {
+		m := WeatherData{mType, min + rand.Float32()*span}
+		// Sending blocks while the channel is full, so we also listen for
+		// the stop signal. Otherwise the sensor could block forever after Stop.
 		select {
+		case s.data <- m:
 		case <-s.stopCh:
 			return
-		default:
-			value := -5 + rand.Float32()*35
-			m := WeatherData{"Temperature", value}
-			s.data <- m
-			time.Sleep(s.pollingInterval)
 		}
-	}
-}
-
-// runHumiditySensor simulates the humidity sensor.
-func (s *Station) runHumiditySensor() {
-	for {
-		select {
-		case <-s.stopCh:
-			return
-		default:
-			m := WeatherData{"Humidity", 40 + rand.Float32()*40}
-			s.data <- m
-			time.Sleep(s.pollingInterval)
-		}
-	}
-}
-
-// runPressureSensor simulates the pressure sensor.
-func (s *Station) runPressureSensor() {
-	for {
-		select {
-		case <-s.stopCh:
-			return
-		default:
-			m := WeatherData{"Pressure", 950 + rand.Float32()*60}
-			s.data <- m
-			time.Sleep(s.pollingInterval)
-		}
+		time.Sleep(s.pollingInterval)
 	}
 }
 
 // GetData retrieves a weather measurement from the station, respecting the timeout.
+// If no measurement arrives within the timeout, it returns ErrTimeout.
 func (s *Station) GetData() (WeatherData, error) {
 	select {
 	case m := <-s.data:
 		return m, nil
 	case <-time.After(s.timeout):
-		return WeatherData{}, errors.New("napaka: vremenska postaja se ne odziva")
+		return WeatherData{}, ErrTimeout
 	}
 }
